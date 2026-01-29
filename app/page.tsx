@@ -320,14 +320,15 @@ export default function Home() {
     (async () => {
       try {
         const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-        const task = { id: editingTaskId, name: editingTaskName.trim() };
+        const updates = { name: editingTaskName.trim() };
         const taskPostHeaders = new Headers();
         taskPostHeaders.append('Content-Type', 'application/json');
         if (token) taskPostHeaders.append('Authorization', `Bearer ${token}`);
         const res = await fetch('/api/tasks', {
-          method: 'POST',
+          method: 'PUT',
+          credentials: 'include',
           headers: taskPostHeaders,
-          body: JSON.stringify({ task })
+          body: JSON.stringify({ taskId: editingTaskId, updates })
         });
         if (res.ok) {
           const json = await res.json();
@@ -363,14 +364,15 @@ export default function Home() {
     (async () => {
       try {
         const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-        const task = { name: newTaskName.trim(), color, shortcut };
+        const payload = { name: newTaskName.trim(), color, shortcut };
         const taskPutHeaders = new Headers();
         taskPutHeaders.append('Content-Type', 'application/json');
         if (token) taskPutHeaders.append('Authorization', `Bearer ${token}`);
         const res = await fetch('/api/tasks', {
-          method: 'PUT',
+          method: 'POST',
+          credentials: 'include',
           headers: taskPutHeaders,
-          body: JSON.stringify({ task })
+          body: JSON.stringify(payload)
         });
         if (res.ok) {
           const json = await res.json();
