@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
 import jwt from "jsonwebtoken";
 import { getEntries, getTasks } from "../../../../lib/api";
+import User from "../../../../models/User";
 import Friendship from "../../../../models/Friendship";
 import { DEFAULT_TASKS } from "../../../../app/constants";
 
@@ -69,6 +70,9 @@ export async function GET(request: NextRequest, _ctx: any) {
     // pie segments
     const circumference = 2 * Math.PI * 40;
     let offset = 0;
+    // sort tasks by hours desc so chart and legend are ordered
+    tasks.sort((a: any, b: any) => (timeDistribution[b.id] || 0) - (timeDistribution[a.id] || 0));
+
     const pieChartSegments = tasks.map((task: any) => {
       const hours = timeDistribution[task.id] || 0;
       const percentage = totalHours === 0 ? 0 : (hours / totalHours) * 100;
@@ -78,6 +82,13 @@ export async function GET(request: NextRequest, _ctx: any) {
       return seg;
     }).filter((s: any) => s.hours > 0);
 
+    // persist last task order for the target user so friends see consistent ordering
+    try {
+      const order = tasks.map(t => t.id);
+      await User.findByIdAndUpdate(targetId, { last_task_order: order }, { new: true }).lean();
+    } catch (uerr) {
+      console.warn('Failed to persist last_task_order', uerr);
+    }
     // weeklyData placeholder - aggregate by week index (simple)
     const weeklyData: { week: string; hours: number }[] = [];
     for (let i = 0; i < 52; i++) weeklyData.push({ week: `W${i + 1}`, hours: 0 });

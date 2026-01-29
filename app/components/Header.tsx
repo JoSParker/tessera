@@ -74,18 +74,6 @@ export default function Header({ currentPage, setCurrentPage }: HeaderProps) {
         </nav>
       </div>
       <div className="flex flex-1 justify-end gap-4 items-center">
-        <label className="hidden lg:flex items-center min-w-40 h-10 max-w-64 relative">
-          <span className="material-symbols-outlined absolute left-3 text-[#92bbc9] text-xl">search</span>
-          <input className="w-full h-full rounded-xl text-white border-none bg-[#233f48]/50 focus:ring-1 focus:ring-primary pl-10 pr-4 text-sm font-normal" placeholder="Search entries..." />
-        </label>
-        <div className="flex gap-2">
-          <button className="flex items-center justify-center rounded-full size-10 bg-[#233f48] text-white hover:bg-primary/20 transition-all">
-            <span className="material-symbols-outlined text-xl">notifications</span>
-          </button>
-          <button className="flex items-center justify-center rounded-full size-10 bg-[#233f48] text-white hover:bg-primary/20 transition-all">
-            <span className="material-symbols-outlined text-xl">settings</span>
-          </button>
-        </div>
         <div className="relative" onMouseEnter={openMenu} onMouseLeave={closeMenu}>
           <div
             className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-primary/30 cursor-pointer"

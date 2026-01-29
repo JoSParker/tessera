@@ -32,7 +32,7 @@ export default function AnalyticsPage({
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
           <div className="glass-panel p-6 rounded-2xl">
             <div className="flex items-center gap-3 mb-4">
               <div className="size-10 bg-primary/20 rounded-xl flex items-center justify-center">
@@ -44,16 +44,7 @@ export default function AnalyticsPage({
             <p className="text-xs text-[#92bbc9] mt-1">hours logged</p>
           </div>
 
-          <div className="glass-panel p-6 rounded-2xl">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="size-10 bg-emerald-500/20 rounded-xl flex items-center justify-center">
-                <span className="material-symbols-outlined text-emerald-500">trending_up</span>
-              </div>
-              <p className="text-[#92bbc9] text-sm">Productivity</p>
-            </div>
-            <p className="text-4xl font-black text-white">{deepWorkRatio}%</p>
-            <p className="text-xs text-[#92bbc9] mt-1">deep work ratio</p>
-          </div>
+          
 
           <div className="glass-panel p-6 rounded-2xl">
             <div className="flex items-center gap-3 mb-4">
@@ -66,16 +57,7 @@ export default function AnalyticsPage({
             <p className="text-xs text-[#92bbc9] mt-1">out of 366 days</p>
           </div>
 
-          <div className="glass-panel p-6 rounded-2xl">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="size-10 bg-amber-500/20 rounded-xl flex items-center justify-center">
-                <span className="material-symbols-outlined text-amber-500">avg_pace</span>
-              </div>
-              <p className="text-[#92bbc9] text-sm">Daily Average</p>
-            </div>
-            <p className="text-4xl font-black text-white">{dailyAverage}</p>
-            <p className="text-xs text-[#92bbc9] mt-1">hours per day</p>
-          </div>
+          {/* Daily Average removed as requested */}
         </div>
 
         {/* Charts Section */}
@@ -98,7 +80,7 @@ export default function AnalyticsPage({
                       strokeWidth="10"
                       strokeDasharray={`${segment.dashArray} ${2 * Math.PI * 40}`}
                       strokeDashoffset={segment.dashOffset}
-                      strokeLinecap="round"
+                      strokeLinecap="butt"
                       style={{ filter: `drop-shadow(0 0 6px ${segment.task.color}80)` }}
                     />
                   ))}
@@ -108,20 +90,23 @@ export default function AnalyticsPage({
                 </div>
               </div>
               <div className="flex flex-col gap-3 flex-1">
-                {tasks.map((task) => {
-                  const hours = timeDistribution[task.id] || 0;
-                  const percent = totalHours > 0 ? Math.round((hours / totalHours) * 100) : 0;
-                  return (
-                    <div key={task.id} className="flex items-center gap-3">
-                      <div 
-                        className="size-3 rounded-full"
-                        style={{ backgroundColor: task.color }}
-                      />
-                      <span className="text-sm text-white flex-1">{task.name}</span>
-                      <span className="text-sm font-mono text-[#92bbc9]">{hours}h ({percent}%)</span>
-                    </div>
-                  );
-                })}
+                {tasks
+                  .slice()
+                  .sort((a, b) => (timeDistribution[b.id] || 0) - (timeDistribution[a.id] || 0))
+                  .map((task) => {
+                    const hours = timeDistribution[task.id] || 0;
+                    const percent = totalHours > 0 ? Math.round((hours / totalHours) * 100) : 0;
+                    return (
+                      <div key={task.id} className="flex items-center gap-3">
+                        <div 
+                          className="size-3 rounded-full"
+                          style={{ backgroundColor: task.color }}
+                        />
+                        <span className="text-sm text-white flex-1">{task.name}</span>
+                        <span className="text-sm font-mono text-[#92bbc9]">{hours}h ({percent}%)</span>
+                      </div>
+                    );
+                  })}
               </div>
             </div>
           </div>
@@ -152,27 +137,30 @@ export default function AnalyticsPage({
         {/* Task Breakdown */}
         <div className="glass-panel p-6 rounded-2xl">
           <h3 className="text-lg font-bold text-white mb-6">Task Breakdown</h3>
-          <div className="space-y-4">
-            {tasks.map((task) => {
-              const hours = timeDistribution[task.id] || 0;
-              const percent = totalHours > 0 ? (hours / totalHours) * 100 : 0;
-              return (
-                <div key={task.id} className="flex items-center gap-4">
-                  <div 
-                    className="size-4 rounded-full shrink-0"
-                    style={{ backgroundColor: task.color }}
-                  />
-                  <span className="text-sm text-white w-32">{task.name}</span>
-                  <div className="flex-1 h-3 bg-[#233f48] rounded-full overflow-hidden">
+            <div className="space-y-4">
+            {tasks
+              .slice()
+              .sort((a, b) => (timeDistribution[b.id] || 0) - (timeDistribution[a.id] || 0))
+              .map((task) => {
+                const hours = timeDistribution[task.id] || 0;
+                const percent = totalHours > 0 ? (hours / totalHours) * 100 : 0;
+                return (
+                  <div key={task.id} className="flex items-center gap-4">
                     <div 
-                      className="h-full rounded-full transition-all"
-                      style={{ width: `${percent}%`, backgroundColor: task.color }}
+                      className="size-4 rounded-full shrink-0"
+                      style={{ backgroundColor: task.color }}
                     />
+                    <span className="text-sm text-white w-32">{task.name}</span>
+                    <div className="flex-1 h-3 bg-[#233f48] rounded-full overflow-hidden">
+                      <div 
+                        className="h-full rounded-full transition-all"
+                        style={{ width: `${percent}%`, backgroundColor: task.color }}
+                      />
+                    </div>
+                    <span className="text-sm font-mono text-[#92bbc9] w-20 text-right">{hours}h</span>
                   </div>
-                  <span className="text-sm font-mono text-[#92bbc9] w-20 text-right">{hours}h</span>
-                </div>
-              );
-            })}
+                );
+              })}
           </div>
         </div>
       </div>

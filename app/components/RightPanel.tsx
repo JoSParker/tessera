@@ -214,7 +214,7 @@ export default function RightPanel({
                   strokeWidth="12"
                   strokeDasharray={`${segment.dashArray} ${2 * Math.PI * 40}`}
                   strokeDashoffset={segment.dashOffset}
-                  strokeLinecap="round"
+                  strokeLinecap="butt"
                   style={{ filter: `drop-shadow(0 0 6px ${segment.task.color}80)` }}
                 />
               ))}
@@ -226,26 +226,30 @@ export default function RightPanel({
           </div>
 
           <div className="flex flex-col gap-3">
-            {tasks.map((task) => {
-              const hours = timeDistribution[task.id] || 0;
-              return (
-                <div key={task.id} className="flex items-center justify-between p-3 rounded-xl bg-[#233f48]/20 border border-[#233f48]/50">
-                  <div className="flex items-center gap-3">
-                    <div 
-                      className="size-2 rounded-full"
-                      style={{ backgroundColor: task.color }}
-                    />
-                    <span className="text-sm text-white font-medium">{task.name}</span>
+            {tasks
+              .slice()
+              .sort((a, b) => (timeDistribution[b.id] || 0) - (timeDistribution[a.id] || 0))
+              .map((task) => {
+                const hours = timeDistribution[task.id] || 0;
+                const percent = totalHours > 0 ? Math.round((hours / totalHours) * 100) : 0;
+                return (
+                  <div key={task.id} className="flex items-center justify-between p-3 rounded-xl bg-[#233f48]/20 border border-[#233f48]/50">
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="size-2 rounded-full"
+                        style={{ backgroundColor: task.color }}
+                      />
+                      <span className="text-sm text-white font-medium">{task.name}</span>
+                    </div>
+                    <span 
+                      className="text-sm font-mono font-bold"
+                      style={{ color: task.color }}
+                    >
+                      {hours}h ({percent}%)
+                    </span>
                   </div>
-                  <span 
-                    className="text-sm font-mono font-bold"
-                    style={{ color: task.color }}
-                  >
-                    {hours}h
-                  </span>
-                </div>
-              );
-            })}
+                );
+              })}
           </div>
 
           <div className="mt-auto glass-panel p-4 rounded-2xl">

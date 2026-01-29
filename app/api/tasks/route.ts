@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { NextRequest } from "next/server";
 import { getTasks, createTask, updateTask, deleteTask as deleteTaskFn } from "../../../lib/api";
+import User from "../../../models/User";
 
 const JWT_SECRET = process.env.JWT_SECRET || "changeme";
 
@@ -22,7 +23,14 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await getTasks(userId);
   if (error) return NextResponse.json({ error }, { status: 500 });
-  return NextResponse.json({ data });
+  // include last_task_order if set on user
+  try {
+    const user = await User.findById(userId).lean();
+    const last_task_order = user?.last_task_order || null;
+    return NextResponse.json({ data, last_task_order });
+  } catch (err) {
+    return NextResponse.json({ data });
+  }
 }
 
 export async function POST(request: NextRequest) {

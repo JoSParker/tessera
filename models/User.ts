@@ -5,6 +5,7 @@ export interface IUser extends Document {
   full_name?: string;
   avatar_url?: string;
   password?: string; // Only for local auth
+  last_task_order?: string[];
   created_at: Date;
   updated_at: Date;
 }
@@ -14,6 +15,7 @@ const UserSchema: Schema = new Schema<IUser>({
   full_name: { type: String },
   avatar_url: { type: String },
   password: { type: String }, // Hashed password for local auth
+  last_task_order: { type: [String], default: [] },
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now },
 });

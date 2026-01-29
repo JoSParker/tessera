@@ -82,7 +82,9 @@ export default function Home() {
     if (totalHours === 0) return [];
     const circumference = 2 * Math.PI * 40;
     let offset = 0;
-    return tasks.map(task => {
+    // sort a copy of tasks by hours descending for consistent chart ordering
+    const ordered = tasks.slice().sort((a, b) => (timeDistribution[b.id] || 0) - (timeDistribution[a.id] || 0));
+    return ordered.map(task => {
       const hours = timeDistribution[task.id] || 0;
       const percentage = (hours / totalHours) * 100;
       const dashArray = (percentage / 100) * circumference;
@@ -417,13 +419,30 @@ export default function Home() {
         if (!res.ok) return;
         const json = await res.json();
         const data = json.data || [];
+        const lastOrder: string[] | null = json.last_task_order || null;
         const mapped: Task[] = data.map((t: any, idx: number) => ({
           id: t._id,
           name: t.name,
           color: t.color || TASK_COLORS[idx % TASK_COLORS.length],
           shortcut: t.shortcut || (idx + 1).toString(),
         }));
-        setTasks(mapped);
+        if (lastOrder && Array.isArray(lastOrder) && lastOrder.length > 0) {
+          // reorder mapped according to lastOrder, preserving tasks not in lastOrder at the end
+          const byId = new Map(mapped.map(m => [m.id, m]));
+          const ordered: Task[] = [];
+          for (const id of lastOrder) {
+            const t = byId.get(id);
+            if (t) {
+              ordered.push(t);
+              byId.delete(id);
+            }
+          }
+          // append remaining
+          for (const t of mapped) if (byId.has(t.id)) ordered.push(t);
+          setTasks(ordered);
+        } else {
+          setTasks(mapped);
+        }
       } catch (err) {
         console.error('Failed to load tasks', err);
       }
