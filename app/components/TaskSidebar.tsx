@@ -1,6 +1,7 @@
 "use client";
 
 import { Task } from "../types";
+import { TASK_COLORS } from "../constants";
 
 interface TaskSidebarProps {
   tasks: Task[];
@@ -14,8 +15,12 @@ interface TaskSidebarProps {
   onSaveEdit: () => void;
   onCancelEdit: () => void;
   onEditingNameChange: (name: string) => void;
+  editingTaskColor: string;
+  onEditingColorChange: (color: string) => void;
   onShowAddTask: (show: boolean) => void;
   onNewTaskNameChange: (name: string) => void;
+  newTaskColor: string;
+  onNewTaskColorChange: (color: string) => void;
   onAddTask: () => void;
 }
 
@@ -31,8 +36,12 @@ export default function TaskSidebar({
   onSaveEdit,
   onCancelEdit,
   onEditingNameChange,
+  onEditingColorChange,
+  editingTaskColor,
   onShowAddTask,
   onNewTaskNameChange,
+  newTaskColor,
+  onNewTaskColorChange,
   onAddTask,
 }: TaskSidebarProps) {
   return (
@@ -57,6 +66,16 @@ export default function TaskSidebar({
                   autoFocus
                   aria-label="Edit task name"
                 />
+                <div className="flex items-center gap-2 mt-2">
+                  <input
+                    type="color"
+                    value={editingTaskColor}
+                    onChange={(e) => { e.stopPropagation(); onEditingColorChange(e.target.value); }}
+                    aria-label="Pick task color"
+                    className="w-10 h-10 p-0 rounded-full border-none"
+                  />
+                  <div className="w-6 h-6 rounded-full" style={{ backgroundColor: editingTaskColor, boxShadow: `0 0 8px ${editingTaskColor}` }} aria-hidden="true" />
+                </div>
                 <div className="flex gap-2">
                   <button
                     onClick={onSaveEdit}
@@ -147,6 +166,16 @@ export default function TaskSidebar({
                 autoFocus
                 aria-label="New task name"
               />
+              <div className="flex items-center gap-2 mt-2">
+                <input
+                  type="color"
+                  value={newTaskColor}
+                  onChange={(e) => { e.stopPropagation(); onNewTaskColorChange(e.target.value); }}
+                  aria-label="Pick new task color"
+                  className="w-10 h-10 p-0 rounded-full border-none"
+                />
+                <div className="w-6 h-6 rounded-full" style={{ backgroundColor: newTaskColor, boxShadow: `0 0 8px ${newTaskColor}` }} aria-hidden="true" />
+              </div>
               <div className="flex gap-2">
                 <button
                   onClick={onAddTask}

@@ -37,8 +37,10 @@ export default function Home() {
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [editingTaskName, setEditingTaskName] = useState("");
+  const [editingTaskColor, setEditingTaskColor] = useState(TASK_COLORS[0]);
   const [showAddTask, setShowAddTask] = useState(false);
   const [newTaskName, setNewTaskName] = useState("");
+  const [newTaskColor, setNewTaskColor] = useState(TASK_COLORS[0]);
 
   // Matrix state
   const [cellData, setCellData] = useState<CellData>({});
@@ -312,6 +314,7 @@ export default function Home() {
     e.stopPropagation();
     setEditingTaskId(task.id);
     setEditingTaskName(task.name);
+    setEditingTaskColor(task.color || TASK_COLORS[0]);
   }, []);
 
   const saveEditedTask = useCallback(() => {
@@ -320,7 +323,7 @@ export default function Home() {
     (async () => {
       try {
         const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-        const updates = { name: editingTaskName.trim() };
+        const updates = { name: editingTaskName.trim(), color: editingTaskColor };
         const taskPostHeaders = new Headers();
         taskPostHeaders.append('Content-Type', 'application/json');
         if (token) taskPostHeaders.append('Authorization', `Bearer ${token}`);
@@ -334,21 +337,27 @@ export default function Home() {
           const json = await res.json();
           const updated = json.data;
           if (updated) {
-            setTasks(prev => prev.map(t => t.id === updated._id ? { ...t, name: updated.name } : t));
+            setTasks(prev => prev.map(t => t.id === updated._id ? { ...t, name: updated.name, color: updated.color || editingTaskColor } : t));
           }
         } else {
           // fallback to local update
-          setTasks(prev => prev.map(t => t.id === editingTaskId ? { ...t, name: editingTaskName.trim() } : t));
+          setTasks(prev => prev.map(t => t.id === editingTaskId ? { ...t, name: editingTaskName.trim(), color: editingTaskColor } : t));
         }
       } catch (err) {
         console.error('Failed to update task', err);
-        setTasks(prev => prev.map(t => t.id === editingTaskId ? { ...t, name: editingTaskName.trim() } : t));
+        setTasks(prev => prev.map(t => t.id === editingTaskId ? { ...t, name: editingTaskName.trim(), color: editingTaskColor } : t));
       }
     })();
 
     setEditingTaskId(null);
     setEditingTaskName("");
-  }, [editingTaskId, editingTaskName]);
+    setEditingTaskColor(TASK_COLORS[0]);
+  }, [editingTaskId, editingTaskName, editingTaskColor]);
+
+  const handleShowAddTask = useCallback((show: boolean) => {
+    if (show) setNewTaskColor(TASK_COLORS[tasks.length % TASK_COLORS.length]);
+    setShowAddTask(show);
+  }, [tasks.length]);
 
   const cancelEditingTask = useCallback(() => {
     setEditingTaskId(null);
@@ -358,7 +367,7 @@ export default function Home() {
   const addNewTask = useCallback(() => {
     if (!newTaskName.trim()) return;
 
-    const color = TASK_COLORS[tasks.length % TASK_COLORS.length];
+    const color = newTaskColor || TASK_COLORS[tasks.length % TASK_COLORS.length];
     const shortcut = (tasks.length + 1).toString();
 
     (async () => {
@@ -394,6 +403,7 @@ export default function Home() {
     })();
 
     setNewTaskName("");
+    setNewTaskColor(TASK_COLORS[0]);
     setShowAddTask(false);
   }, [newTaskName, tasks.length]);
 
@@ -492,6 +502,7 @@ export default function Home() {
             selectedTaskId={selectedTaskId}
             editingTaskId={editingTaskId}
             editingTaskName={editingTaskName}
+            editingTaskColor={editingTaskColor}
             showAddTask={showAddTask}
             newTaskName={newTaskName}
             onSelectTask={selectTask}
@@ -499,8 +510,11 @@ export default function Home() {
             onSaveEdit={saveEditedTask}
             onCancelEdit={cancelEditingTask}
             onEditingNameChange={setEditingTaskName}
-            onShowAddTask={setShowAddTask}
+            onEditingColorChange={setEditingTaskColor}
+            onShowAddTask={handleShowAddTask}
             onNewTaskNameChange={setNewTaskName}
+            newTaskColor={newTaskColor}
+            onNewTaskColorChange={setNewTaskColor}
             onAddTask={addNewTask}
           />
 
