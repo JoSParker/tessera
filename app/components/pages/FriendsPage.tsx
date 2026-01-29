@@ -16,7 +16,8 @@ export default function FriendsPage({ totalHours }: { totalHours?: number }) {
   const fetchAll = async () => {
     try {
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-      const res = await fetch('/api/friends', { headers: token ? { Authorization: `Bearer ${token}` } : undefined });
+      const getHeaders = token ? new Headers({ Authorization: `Bearer ${token}` }) : undefined;
+      const res = await fetch('/api/friends', { headers: getHeaders });
       if (!res.ok) return;
       const json = await res.json();
       setFriends(json.friends || []);
@@ -36,9 +37,12 @@ export default function FriendsPage({ totalHours }: { totalHours?: number }) {
     if (!query.trim()) return setResults([]);
     try {
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const headers = new Headers();
+      headers.append('Content-Type', 'application/json');
+      if (token) headers.append('Authorization', `Bearer ${token}`);
       const res = await fetch('/api/friends', {
         method: 'POST',
-        headers: Object.assign({ 'Content-Type': 'application/json' }, token ? { Authorization: `Bearer ${token}` } : {}),
+        headers,
         body: JSON.stringify({ action: 'search', query })
       });
       if (!res.ok) return;
@@ -54,9 +58,12 @@ export default function FriendsPage({ totalHours }: { totalHours?: number }) {
     setPendingRequests(prev => new Set(prev).add(String(userId)));
     try {
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const headers = new Headers();
+      headers.append('Content-Type', 'application/json');
+      if (token) headers.append('Authorization', `Bearer ${token}`);
       const res = await fetch('/api/friends', {
         method: 'POST',
-        headers: Object.assign({ 'Content-Type': 'application/json' }, token ? { Authorization: `Bearer ${token}` } : {}),
+        headers,
         body: JSON.stringify({ action: 'request', addresseeId: userId })
       });
       if (!res.ok) return;
@@ -76,9 +83,12 @@ export default function FriendsPage({ totalHours }: { totalHours?: number }) {
   const respond = async (friendshipId: string, status: 'accepted' | 'declined') => {
     try {
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const headers = new Headers();
+      headers.append('Content-Type', 'application/json');
+      if (token) headers.append('Authorization', `Bearer ${token}`);
       const res = await fetch('/api/friends', {
         method: 'POST',
-        headers: Object.assign({ 'Content-Type': 'application/json' }, token ? { Authorization: `Bearer ${token}` } : {}),
+        headers,
         body: JSON.stringify({ action: 'respond', friendshipId, status })
       });
       if (!res.ok) return;

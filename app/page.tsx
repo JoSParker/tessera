@@ -162,12 +162,15 @@ export default function Home() {
             return { task_id: selectedTaskId!, day_index, hour };
           });
           const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-          await fetch("/api/entries", {
-            method: "POST",
-            credentials: 'include',
-            headers: Object.assign({ "Content-Type": "application/json" }, token ? { Authorization: `Bearer ${token}` } : {}),
-            body: JSON.stringify({ entries }),
-          });
+            const postHeaders = new Headers();
+            postHeaders.append("Content-Type", "application/json");
+            if (token) postHeaders.append("Authorization", `Bearer ${token}`);
+            await fetch("/api/entries", {
+              method: "POST",
+              credentials: 'include',
+              headers: postHeaders,
+              body: JSON.stringify({ entries }),
+            });
         } catch (err) {
           console.error("Failed to save entries", err);
         }
@@ -213,12 +216,15 @@ export default function Home() {
             return { day_index, hour };
           });
           const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-          await fetch("/api/entries", {
-            method: "DELETE",
-            credentials: 'include',
-            headers: Object.assign({ "Content-Type": "application/json" }, token ? { Authorization: `Bearer ${token}` } : {}),
-            body: JSON.stringify({ cells }),
-          });
+            const deleteHeaders = new Headers();
+            deleteHeaders.append("Content-Type", "application/json");
+            if (token) deleteHeaders.append("Authorization", `Bearer ${token}`);
+            await fetch("/api/entries", {
+              method: "DELETE",
+              credentials: 'include',
+              headers: deleteHeaders,
+              body: JSON.stringify({ cells }),
+            });
         } catch (err) {
           console.error("Failed to delete entries", err);
         }
@@ -314,25 +320,28 @@ export default function Home() {
     (async () => {
       try {
         const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        const task = { id: editingTaskId, name: editingTaskName.trim() };
+        const taskPostHeaders = new Headers();
+        taskPostHeaders.append('Content-Type', 'application/json');
+        if (token) taskPostHeaders.append('Authorization', `Bearer ${token}`);
         const res = await fetch('/api/tasks', {
-          method: 'PUT',
-          credentials: 'include',
-          headers: Object.assign({ 'Content-Type': 'application/json' }, token ? { Authorization: `Bearer ${token}` } : {}),
-          body: JSON.stringify({ taskId: editingTaskId, updates: { name: editingTaskName.trim() } }),
+          method: 'POST',
+          headers: taskPostHeaders,
+          body: JSON.stringify({ task })
         });
         if (res.ok) {
           const json = await res.json();
           const updated = json.data;
           if (updated) {
-            setTasks(prev => prev.map(task => task.id === updated._id ? { ...task, name: updated.name } : task));
+            setTasks(prev => prev.map(t => t.id === updated._id ? { ...t, name: updated.name } : t));
           }
         } else {
           // fallback to local update
-          setTasks(prev => prev.map(task => task.id === editingTaskId ? { ...task, name: editingTaskName.trim() } : task));
+          setTasks(prev => prev.map(t => t.id === editingTaskId ? { ...t, name: editingTaskName.trim() } : t));
         }
       } catch (err) {
         console.error('Failed to update task', err);
-        setTasks(prev => prev.map(task => task.id === editingTaskId ? { ...task, name: editingTaskName.trim() } : task));
+        setTasks(prev => prev.map(t => t.id === editingTaskId ? { ...t, name: editingTaskName.trim() } : t));
       }
     })();
 
@@ -354,11 +363,14 @@ export default function Home() {
     (async () => {
       try {
         const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        const task = { name: newTaskName.trim(), color, shortcut };
+        const taskPutHeaders = new Headers();
+        taskPutHeaders.append('Content-Type', 'application/json');
+        if (token) taskPutHeaders.append('Authorization', `Bearer ${token}`);
         const res = await fetch('/api/tasks', {
-          method: 'POST',
-          credentials: 'include',
-          headers: Object.assign({ 'Content-Type': 'application/json' }, token ? { Authorization: `Bearer ${token}` } : {}),
-          body: JSON.stringify({ name: newTaskName.trim(), color, shortcut }),
+          method: 'PUT',
+          headers: taskPutHeaders,
+          body: JSON.stringify({ task })
         });
         if (res.ok) {
           const json = await res.json();

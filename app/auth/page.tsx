@@ -1,15 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 import { signInWithEmail, signUpWithEmail } from "@/lib/apiClient";
 import { useAuth } from "@/app/contexts/AuthContext";
 import styles from './AuthPage.module.css';
 
+export const dynamic = 'force-dynamic';
+
 export default function AuthPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { user, loading: authLoading, signIn } = useAuth();
   
   const [isLogin, setIsLogin] = useState(true);
@@ -27,11 +28,12 @@ export default function AuthPage() {
 
   // Check for error in URL params
   useEffect(() => {
-    const errorParam = searchParams.get("error");
+    const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    const errorParam = params?.get("error");
     if (errorParam) {
       setError(errorParam);
     }
-  }, [searchParams]);
+  }, []);
 
   // Redirect if already logged in
   useEffect(() => {

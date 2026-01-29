@@ -20,9 +20,8 @@ const GoalSchema: Schema = new Schema<IGoal>({
   updated_at: { type: Date, default: Date.now },
 });
 
-GoalSchema.pre('save', function (next) {
+GoalSchema.pre('save', function () {
   this.updated_at = new Date();
-  next();
 });
 
 export default mongoose.models.Goal || mongoose.model<IGoal>('Goal', GoalSchema);
