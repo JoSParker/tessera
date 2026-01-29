@@ -20,9 +20,8 @@ const TaskSchema: Schema = new Schema<ITask>({
   updated_at: { type: Date, default: Date.now },
 });
 
-TaskSchema.pre('save', function (next) {
+TaskSchema.pre('save', function () {
   this.updated_at = new Date();
-  next();
 });
 
 export default mongoose.models.Task || mongoose.model<ITask>('Task', TaskSchema);

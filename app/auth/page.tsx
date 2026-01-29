@@ -5,11 +5,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { signInWithEmail, signUpWithEmail } from "@/lib/apiClient";
 import { useAuth } from "@/app/contexts/AuthContext";
+import styles from './AuthPage.module.css';
 
 export default function AuthPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, signIn } = useAuth();
   
   const [isLogin, setIsLogin] = useState(true);
   const [isFlipping, setIsFlipping] = useState(false);
@@ -57,9 +58,14 @@ export default function AuthPage() {
     try {
       if (isLogin) {
         // Sign In
-        const { data, error } = await signInWithEmail(formData.email, formData.password);
-        if (error) throw error;
-        router.push("/");
+        const res = await signInWithEmail(formData.email, formData.password);
+        if (res?.error) throw new Error(res.error);
+        if (res?.token) {
+          signIn(res.token);
+          router.push("/");
+        } else {
+          throw new Error('Invalid response from server');
+        }
       } else {
         // Sign Up
         if (formData.password !== formData.confirmPassword) {
@@ -110,30 +116,25 @@ export default function AuthPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-obsidian flex items-center justify-center">
+      <div className={styles.container}>
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-obsidian flex items-center justify-center p-4" style={{ perspective: "1000px" }}>
-      <div 
-        className={`w-full max-w-md transition-transform duration-600 ease-out ${isFlipping ? "scale-95 opacity-80" : ""}`}
-        style={{ transformStyle: "preserve-3d" }}
-      >
-        <div className="glass-panel rounded-2xl p-8 border border-[#233f48]">
+    <div className={styles.container}>
+      <div className={`${styles.flipContainer} ${isFlipping ? styles.flipping : ''}`} style={{ transformStyle: "preserve-3d" }}>
+        <div className={styles.authCard}>
           {/* Header */}
-          <div className="text-center mb-8">
+          <div className={styles.header}>
             <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="size-10 bg-primary/20 rounded-xl flex items-center justify-center">
-                <span className="material-symbols-outlined text-primary text-2xl">grid_view</span>
+                <div className="size-10 bg-primary/20 rounded-xl flex items-center justify-center">
+                  <img src="/logo.png" alt="tessera" className="h-8 w-8 object-contain" />
+                </div>
+                <h1 className={styles.title}>tessera</h1>
               </div>
-              <h1 className="text-2xl font-bold text-white tracking-tight">ChronosMatrix</h1>
-            </div>
-            <p className="text-sm text-[#92bbc9] uppercase tracking-wider font-mono">
-              {isLogin ? "Sign in to your account" : "Create new account"}
-            </p>
+            <p className={styles.subtitle}>{isLogin ? "Sign in to your account" : "Create new account"}</p>
           </div>
 
           {/* Error/Success Messages */}
@@ -149,65 +150,57 @@ export default function AuthPage() {
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className={styles.form}>
             {!isLogin && (
-              <div>
-                <label className="block text-xs font-bold text-[#92bbc9] uppercase tracking-wider mb-2">
-                  Full Name
-                </label>
+              <div className={styles.inputGroup}>
+                <label className={styles.label}>Full Name</label>
                 <input
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className="w-full bg-[#233f48]/30 border border-[#233f48] rounded-xl px-4 py-3 text-white placeholder-[#92bbc9]/50 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
+                  className={styles.input}
                   placeholder="Enter your full name"
                   required={!isLogin}
                 />
               </div>
             )}
 
-            <div>
-              <label className="block text-xs font-bold text-[#92bbc9] uppercase tracking-wider mb-2">
-                Email Address
-              </label>
+            <div className={styles.inputGroup}>
+              <label className={styles.label}>Email Address</label>
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className="w-full bg-[#233f48]/30 border border-[#233f48] rounded-xl px-4 py-3 text-white placeholder-[#92bbc9]/50 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
+                className={styles.input}
                 placeholder="Enter your email"
                 required
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-[#92bbc9] uppercase tracking-wider mb-2">
-                Password
-              </label>
+            <div className={styles.inputGroup}>
+              <label className={styles.label}>Password</label>
               <input
                 type="password"
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
-                className="w-full bg-[#233f48]/30 border border-[#233f48] rounded-xl px-4 py-3 text-white placeholder-[#92bbc9]/50 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
+                className={styles.input}
                 placeholder="Enter your password"
                 required
               />
             </div>
 
             {!isLogin && (
-              <div>
-                <label className="block text-xs font-bold text-[#92bbc9] uppercase tracking-wider mb-2">
-                  Confirm Password
-                </label>
+              <div className={styles.inputGroup}>
+                <label className={styles.label}>Confirm Password</label>
                 <input
                   type="password"
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
-                  className="w-full bg-[#233f48]/30 border border-[#233f48] rounded-xl px-4 py-3 text-white placeholder-[#92bbc9]/50 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
+                  className={styles.input}
                   placeholder="Confirm your password"
                   required={!isLogin}
                 />
@@ -217,16 +210,14 @@ export default function AuthPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-primary hover:bg-primary/90 disabled:bg-primary/50 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2"
+              className={styles.submitButton}
               style={{ boxShadow: "0 4px 20px rgba(19, 182, 236, 0.3)" }}
             >
               {loading ? (
                 <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
               ) : (
                 <>
-                  <span className="material-symbols-outlined text-sm">
-                    {isLogin ? "login" : "person_add"}
-                  </span>
+                  <span className="material-symbols-outlined text-sm">{isLogin ? "login" : "person_add"}</span>
                   {isLogin ? "Sign In" : "Create Account"}
                 </>
               )}
@@ -234,36 +225,21 @@ export default function AuthPage() {
           </form>
 
           {/* Divider */}
-          <div className="relative my-8">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-[#233f48]"></div>
-            </div>
-            <div className="relative flex justify-center">
-              <span className="px-4 text-xs font-mono text-[#92bbc9] uppercase bg-[#101d22]">Or</span>
-            </div>
+          <div className={styles.divider}>
+            <div className={styles.dividerText}>Or</div>
           </div>
 
-          
-
           {/* Toggle Mode */}
-          <div className="mt-8 pt-6 border-t border-[#233f48] text-center">
-            <p className="text-sm text-[#92bbc9] mb-2">
-              {isLogin ? "Don't have an account?" : "Already have an account?"}
-            </p>
-            <button
-              type="button"
-              onClick={toggleMode}
-              className="text-primary hover:text-primary/80 font-medium transition-colors"
-            >
+          <div className={styles.toggleSection}>
+            <p className={styles.toggleText}>{isLogin ? "Don't have an account?" : "Already have an account?"}</p>
+            <button type="button" onClick={toggleMode} className={styles.toggleButton}>
               {isLogin ? "Create one" : "Sign in"}
             </button>
           </div>
 
           {/* Footer */}
-          <div className="mt-8 text-center">
-            <p className="text-[10px] text-[#92bbc9]/50 uppercase tracking-widest font-mono">
-              Secure time tracking for professionals
-            </p>
+          <div className={styles.footer}>
+            <p className={styles.footerText}>Secure time tracking for professionals</p>
           </div>
         </div>
       </div>

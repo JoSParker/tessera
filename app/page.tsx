@@ -52,7 +52,7 @@ export default function Home() {
 
   // Goals & Friends state
   const [goals, setGoals] = useState<GoalItem[]>(DEFAULT_GOALS);
-  const [friends] = useState<Friend[]>(DEFAULT_FRIENDS);
+  const [friends] = useState<Friend[]>([]);
 
   // Generate year days
   const yearDays = useMemo(() => generateYearDays(2024), []);
@@ -105,20 +105,6 @@ export default function Home() {
     return weeks;
   }, []);
 
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.replace("/auth");
-    }
-  }, [user, authLoading, router]);
-
-  if (authLoading || !user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-obsidian">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
   // Get task by id
   const getTaskById = useCallback((taskId: string | null) => {
     return tasks.find(t => t.id === taskId);
@@ -159,6 +145,7 @@ export default function Home() {
   // Entry confirmation handlers
   const confirmEntry = useCallback(() => {
     if (selectedTaskId && pendingCells.size > 0) {
+      // Update UI immediately
       setCellData(prev => {
         const newData = { ...prev };
         pendingCells.forEach(cellKey => {
@@ -166,6 +153,25 @@ export default function Home() {
         });
         return newData;
       });
+
+      // Persist to server
+      (async () => {
+        try {
+          const entries = Array.from(pendingCells).map(cellKey => {
+            const [day_index, hour] = cellKey.split("-").map(Number);
+            return { task_id: selectedTaskId!, day_index, hour };
+          });
+          const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+          await fetch("/api/entries", {
+            method: "POST",
+            credentials: 'include',
+            headers: Object.assign({ "Content-Type": "application/json" }, token ? { Authorization: `Bearer ${token}` } : {}),
+            body: JSON.stringify({ entries }),
+          });
+        } catch (err) {
+          console.error("Failed to save entries", err);
+        }
+      })();
     }
     setPendingCells(new Set());
     setSelectedTaskId(null);
@@ -199,10 +205,53 @@ export default function Home() {
         });
         return newData;
       });
+      // Persist deletes to server
+      (async () => {
+        try {
+          const cells = Array.from(pendingCells).map(cellKey => {
+            const [day_index, hour] = cellKey.split("-").map(Number);
+            return { day_index, hour };
+          });
+          const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+          await fetch("/api/entries", {
+            method: "DELETE",
+            credentials: 'include',
+            headers: Object.assign({ "Content-Type": "application/json" }, token ? { Authorization: `Bearer ${token}` } : {}),
+            body: JSON.stringify({ cells }),
+          });
+        } catch (err) {
+          console.error("Failed to delete entries", err);
+        }
+      })();
     }
     setPendingCells(new Set());
     setClearMode(false);
   }, [pendingCells, cellData]);
+
+  // Load persisted entries for the current user
+  useEffect(() => {
+    if (!user) return;
+      (async () => {
+        try {
+          const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+          const res = await fetch("/api/entries", {
+            credentials: 'include',
+            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+          });
+          if (!res.ok) return;
+          const json = await res.json();
+          const entries = json.data || [];
+          const mapped: CellData = {};
+          entries.forEach((e: any) => {
+            const key = `${e.day_index}-${e.hour}`;
+            mapped[key] = e.task_id;
+          });
+          setCellData(mapped);
+        } catch (err) {
+          console.error("Failed to load entries", err);
+        }
+      })();
+  }, [user]);
 
   // Right-click to remove cell
   const handleCellRightClick = useCallback((e: React.MouseEvent, cellKey: string) => {
@@ -261,12 +310,32 @@ export default function Home() {
 
   const saveEditedTask = useCallback(() => {
     if (!editingTaskId || !editingTaskName.trim()) return;
-    
-    setTasks(prev => prev.map(task => 
-      task.id === editingTaskId 
-        ? { ...task, name: editingTaskName.trim() }
-        : task
-    ));
+
+    (async () => {
+      try {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        const res = await fetch('/api/tasks', {
+          method: 'PUT',
+          credentials: 'include',
+          headers: Object.assign({ 'Content-Type': 'application/json' }, token ? { Authorization: `Bearer ${token}` } : {}),
+          body: JSON.stringify({ taskId: editingTaskId, updates: { name: editingTaskName.trim() } }),
+        });
+        if (res.ok) {
+          const json = await res.json();
+          const updated = json.data;
+          if (updated) {
+            setTasks(prev => prev.map(task => task.id === updated._id ? { ...task, name: updated.name } : task));
+          }
+        } else {
+          // fallback to local update
+          setTasks(prev => prev.map(task => task.id === editingTaskId ? { ...task, name: editingTaskName.trim() } : task));
+        }
+      } catch (err) {
+        console.error('Failed to update task', err);
+        setTasks(prev => prev.map(task => task.id === editingTaskId ? { ...task, name: editingTaskName.trim() } : task));
+      }
+    })();
+
     setEditingTaskId(null);
     setEditingTaskName("");
   }, [editingTaskId, editingTaskName]);
@@ -278,18 +347,71 @@ export default function Home() {
 
   const addNewTask = useCallback(() => {
     if (!newTaskName.trim()) return;
-    
-    const newTask: Task = {
-      id: `task-${Date.now()}`,
-      name: newTaskName.trim(),
-      color: TASK_COLORS[tasks.length % TASK_COLORS.length],
-      shortcut: (tasks.length + 1).toString(),
-    };
-    
-    setTasks(prev => [...prev, newTask]);
+
+    const color = TASK_COLORS[tasks.length % TASK_COLORS.length];
+    const shortcut = (tasks.length + 1).toString();
+
+    (async () => {
+      try {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        const res = await fetch('/api/tasks', {
+          method: 'POST',
+          credentials: 'include',
+          headers: Object.assign({ 'Content-Type': 'application/json' }, token ? { Authorization: `Bearer ${token}` } : {}),
+          body: JSON.stringify({ name: newTaskName.trim(), color, shortcut }),
+        });
+        if (res.ok) {
+          const json = await res.json();
+          const created = json.data;
+          if (created) {
+            const newTask: Task = { id: created._id, name: created.name, color: created.color || color, shortcut: created.shortcut || shortcut };
+            setTasks(prev => [...prev, newTask]);
+          }
+        } else {
+          // fallback locally
+          const newTask: Task = { id: `task-${Date.now()}`, name: newTaskName.trim(), color, shortcut };
+          setTasks(prev => [...prev, newTask]);
+        }
+      } catch (err) {
+        console.error('Failed to create task', err);
+        const newTask: Task = { id: `task-${Date.now()}`, name: newTaskName.trim(), color, shortcut };
+        setTasks(prev => [...prev, newTask]);
+      }
+    })();
+
     setNewTaskName("");
     setShowAddTask(false);
   }, [newTaskName, tasks.length]);
+
+  // Load persisted tasks for user
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      try {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        const res = await fetch('/api/tasks', { credentials: 'include', headers: token ? { Authorization: `Bearer ${token}` } : undefined });
+        if (!res.ok) return;
+        const json = await res.json();
+        const data = json.data || [];
+        const mapped: Task[] = data.map((t: any, idx: number) => ({
+          id: t._id,
+          name: t.name,
+          color: t.color || TASK_COLORS[idx % TASK_COLORS.length],
+          shortcut: t.shortcut || (idx + 1).toString(),
+        }));
+        setTasks(mapped);
+      } catch (err) {
+        console.error('Failed to load tasks', err);
+      }
+    })();
+  }, [user]);
+
+  // Auth redirect effect
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.replace("/auth");
+    }
+  }, [user, authLoading, router]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -330,6 +452,15 @@ export default function Home() {
       return () => clearTimeout(timer);
     }
   }, [showUndo]);
+
+  // Loading state - render after all hooks
+  if (authLoading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-obsidian">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -400,7 +531,7 @@ export default function Home() {
       ) : currentPage === "goals" ? (
         <GoalsPage goals={goals} setGoals={setGoals} />
       ) : (
-        <FriendsPage friends={friends} totalHours={totalHours} />
+        <FriendsPage totalHours={totalHours} />
       )}
 
       {/* Legend Bar - Only on Matrix page */}

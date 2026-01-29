@@ -1,4 +1,4 @@
-# ChronosMatrix Backend Setup
+# tessera Backend Setup
 
 ## Database Setup (Supabase)
 

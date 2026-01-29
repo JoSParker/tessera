@@ -1,5 +1,5 @@
 -- ============================================
--- ChronosMatrix Database Setup for Supabase
+-- tessera Database Setup for Supabase
 -- Run this SQL in your Supabase SQL editor
 -- ============================================
 

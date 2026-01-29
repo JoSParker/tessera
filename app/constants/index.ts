@@ -29,7 +29,12 @@ export const DEFAULT_FRIENDS: Friend[] = [
 export const TASK_COLORS = ["#f43f5e", "#06b6d4", "#8b5cf6", "#84cc16", "#f97316", "#6366f1"];
 
 // User avatar URL
-export const USER_AVATAR_URL = "https://lh3.googleusercontent.com/aida-public/AB6AXuDsQL-QGR_YHUwVB9uWyDy915x5dfjd3r1BPcFG2tnWaZbT_vl0Qwg5stFQeVUiE91HQTM9pKf29XNLMKoymeOj9RlyEp5oPAvEORxE2VKyXXvPOj2NV0PuyyUXMy5aD9eBi-8U3yrQ5vAvpJb5m-pf_BBw5ziNiI8oriMD9U1CHGybuXMtnbt2DCtqJWnrKpn-XCQnIaXviSiuFlJeO3tilrEfvR8VJJZx7XBEb7bO72MLxC45rba_d0HDO_BPDs94C9CzzMPZEwY";
+// App branding
+export const APP_NAME = "tessera";
+export const LOGO_URL = "/logo.png";
+
+// User avatar (use local image in `public/`)
+export const USER_AVATAR_URL = "/user.png";
 
 // Helper to generate all days of the year
 export const generateYearDays = (year: number): YearDay[] => {

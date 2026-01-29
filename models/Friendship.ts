@@ -16,9 +16,8 @@ const FriendshipSchema: Schema = new Schema<IFriendship>({
   updated_at: { type: Date, default: Date.now },
 });
 
-FriendshipSchema.pre('save', function (next) {
+FriendshipSchema.pre('save', function () {
   this.updated_at = new Date();
-  next();
 });
 
 export default mongoose.models.Friendship || mongoose.model<IFriendship>('Friendship', FriendshipSchema);
