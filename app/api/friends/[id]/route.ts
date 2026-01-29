@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
 import jwt from "jsonwebtoken";
-import { getEntries } from "../../../../lib/api";
+import { getEntries, getTasks } from "../../../../lib/api";
 import Friendship from "../../../../models/Friendship";
 import { DEFAULT_TASKS } from "../../../../app/constants";
 
@@ -46,9 +46,19 @@ export async function GET(request: NextRequest, _ctx: any) {
 
   try {
     const { data: entries } = await getEntries(targetId);
+    // load user's custom tasks
+    const { data: tasksData } = await getTasks(targetId);
+    const tasks = (tasksData || []).map((t: any, idx: number) => ({
+      id: t._id,
+      name: t.name,
+      color: t.color || DEFAULT_TASKS[idx % DEFAULT_TASKS.length].color,
+      shortcut: t.shortcut || (idx + 1).toString(),
+    }));
+
     const cellData: { [key: string]: string } = {};
     const timeDistribution: { [taskId: string]: number } = {};
-    DEFAULT_TASKS.forEach(t => (timeDistribution[t.id] = 0));
+    // initialize distribution for each task id
+    tasks.forEach(t => (timeDistribution[t.id] = 0));
     (entries || []).forEach((e: any) => {
       const key = `${e.day_index}-${e.hour}`;
       cellData[key] = e.task_id;
@@ -59,7 +69,7 @@ export async function GET(request: NextRequest, _ctx: any) {
     // pie segments
     const circumference = 2 * Math.PI * 40;
     let offset = 0;
-    const pieChartSegments = DEFAULT_TASKS.map(task => {
+    const pieChartSegments = tasks.map((task: any) => {
       const hours = timeDistribution[task.id] || 0;
       const percentage = totalHours === 0 ? 0 : (hours / totalHours) * 100;
       const dashArray = (percentage / 100) * circumference;
@@ -77,7 +87,7 @@ export async function GET(request: NextRequest, _ctx: any) {
       if (weeklyData[weekIndex]) weeklyData[weekIndex].hours++;
     });
 
-    return NextResponse.json({ tasks: DEFAULT_TASKS, cellData, timeDistribution, totalHours, pieChartSegments, weeklyData });
+    return NextResponse.json({ tasks, cellData, timeDistribution, totalHours, pieChartSegments, weeklyData });
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
