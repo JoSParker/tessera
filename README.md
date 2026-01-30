@@ -20,110 +20,42 @@ Place the provided screenshots in `public/screenshots/` with those filenames to 
 
 - Framework: Next.js (App Router)
 - UI: React + Tailwind CSS
-- Optional services: Supabase / PostgreSQL (SQL schema included)
+# Tessera
 
-**Where to look**
-
-- App shell and global layout: [app/layout.tsx](app/layout.tsx)
-- Main app logic and page: [app/page.tsx](app/page.tsx)
-- Core UI components: [app/components](app/components) (Header, TaskSidebar, MatrixGrid, RightPanel, Footer)
-- API routes: [app/api](app/api) — entries, tasks, friends, auth
-- Utilities and DB helpers: [lib](lib)
-- Static assets and logos: [public](public)
-
-**Quick Start (local)**
-
-1. Install dependencies
-
-```bash
-npm install
-```
-
-2. Create `.env.local` at the project root and add the environment variables your setup requires. Common variables used by the app:
-
-```
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-DATABASE_URL=
-```
-
-3. (Optional) If using Postgres for persistence, import `database_setup.sql` into your database.
-
-4. Start the dev server
-
-```bash
-npm run dev
-```
-
-5. Open http://localhost:3000
-
-**API & Data flow**
-
-- Client-side UI triggers local state updates immediately, then calls API routes under [app/api](app/api) to persist changes.
-- Entries are posted to [app/api/entries/route.ts](app/api/entries/route.ts) (POST/DELETE) and tasks are managed via [app/api/tasks/route.ts](app/api/tasks/route.ts).
-
-**Branding & Assets**
-
-- Replace `public/logo.png` to change the app logo.
-- `public/next.svg` was updated to reference the local logo so the Next.js mark no longer appears in the UI.
-
-**Deployment**
-
-- Deploy to Vercel for simplest setup. Make sure you add required env vars (Supabase keys, DATABASE_URL) in the Vercel project settings.
-
-**Development notes & tips**
-
-- Change default task colors in [app/constants](app/constants).
-- The `AuthContext` in [app/contexts/AuthContext.tsx](app/contexts/AuthContext.tsx) handles sign-in/out flows used throughout the app.
-- Keyboard shortcuts and selection behavior are implemented in [app/page.tsx](app/page.tsx) and `useKeyboardShortcuts` under [app/hooks](app/hooks).
-
-**Contributing**
-
-- Fork the repo, create a feature branch, run the app locally, and open a pull request. Include screenshots for visual changes.
-
-**License**
-
-MIT
+Tessera is a focused, dark-themed time-tracking matrix application built with Next.js. It provides hour-by-hour logging, visual analytics, and lightweight social features so you can track and compare how you spend your time.
 
 ---
 
-If you want, I can add the three attached screenshots into `public/screenshots/` now and create a short `CONTRIBUTING.md` with development and PR guidelines. Which would you like next?
-# Tessera
-
-Tessera is a dark-themed time-tracking matrix application built with Next.js. It lets you assign tasks to hourly cells over days, visualize time distribution and analytics, and compete with friends.
-
-<!-- Screenshots: save the attached images under `public/screenshots/` with the filenames used below -->
-
 ## Screenshots
 
-Matrix view
+Matrix overview
 
-![Matrix view](public/screenshots/matrix-overview.png)
+![Matrix view](public/Matrix.png)
 
 Friends dashboard
 
-![Friends view](public/screenshots/friends.png)
+![Friends view](public/Friends.png)
 
 Analytics & breakdown
 
-![Analytics view](public/screenshots/analytics.png)
+![Analytics view](public/Dashboard.png)
 
-## Features
+---
 
-- Hour-by-hour day matrix for precise activity logging
-- Persistent tasks with colors and shortcuts
-- Visual analytics: time distribution, weekly activity, task breakdown
+## Highlights
+
+- Hour-by-hour matrix for precise activity logging
+- Color-coded tasks with shortcuts and quick-editing
+- Visual analytics: time distribution, weekly activity, and task breakdown
 - Friends, leaderboards, and per-friend dashboards
-- Lightweight, dark UI optimized for long sessions
 
-## Quick Start
+## Tech
 
-Prerequisites:
+- Next.js (App Router)
+- React + Tailwind CSS
+- Optional: Supabase / PostgreSQL for persistence (see `database_setup.sql`)
 
-- Node.js 18+ (or current LTS)
-- Optional: PostgreSQL (for production) — `database_setup.sql` is included
-
-Local development:
+## Quick start
 
 1. Install dependencies
 
@@ -131,16 +63,17 @@ Local development:
 npm install
 ```
 
-2. Create a `.env.local` file and add any required environment variables. Typical variables may include:
+2. Add environment variables in `.env.local` (example):
 
 ```
-# example
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 DATABASE_URL=
 ```
 
-3. Run the dev server
+3. (Optional) Initialize the database with `database_setup.sql`.
+
+4. Run the app
 
 ```bash
 npm run dev
@@ -148,57 +81,21 @@ npm run dev
 
 Open http://localhost:3000
 
-## Database
+## Where to look
 
-If you plan to use the bundled SQL schema, import `database_setup.sql` into your Postgres instance and wire `DATABASE_URL`.
+- `app/page.tsx` — main page and interaction logic
+- `app/components` — UI components (Header, TaskSidebar, MatrixGrid, RightPanel, Footer)
+- `app/api` — server routes for entries, tasks, friends, and auth
+- `public` — static assets and images (replace `public/logo.png` to update branding)
 
 ## Deployment
 
-This is a standard Next.js app and can be deployed to Vercel, Render, or any platform that supports Next.js. Ensure environment variables and any external services (Supabase, DB) are configured.
+Deploy to Vercel or any Next.js host. Add required env vars in your deployment settings.
 
 ## Contributing
 
-Contributions are welcome. Please open an issue or submit a pull request. Include screenshots and a brief description of changes.
+- Fork, branch, test locally, and open a pull request with screenshots for UI changes.
 
 ## License
 
 MIT
-
----
-
-This project was bootstrapped from Create Next App and adapted into the Tessera interface.
-
-## Getting Started
-
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
