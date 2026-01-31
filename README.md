@@ -24,7 +24,7 @@ Analytics & breakdown
 
 - Hour-by-hour matrix for precise activity logging
 - Color-coded tasks with shortcuts and quick-editing
-- Visual analytics: time distribution, weekly activity, and task breakdown
+- Visual analytic:- time distribution, weekly activity, and task breakdown
 - Friends, leaderboards, and per-friend dashboards
 
 ## Tech
